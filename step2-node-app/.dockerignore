@@ -1,0 +1,9 @@
+# Files we DON'T want copied into the image (keeps it small & clean).
+# node_modules is rebuilt inside the container by "npm install",
+# so copying your local copy would be wasteful and can cause bugs.
+node_modules
+npm-debug.log
+.git
+.DS_Store
+Dockerfile
+.dockerignore

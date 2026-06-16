@@ -1,0 +1,13 @@
+{
+  "name": "step3-compose",
+  "version": "1.0.0",
+  "description": "A visit counter — my app + Redis, wired with Docker Compose",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "redis": "^4.6.13"
+  }
+}

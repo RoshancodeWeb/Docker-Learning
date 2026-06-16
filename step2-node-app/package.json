@@ -1,0 +1,12 @@
+{
+  "name": "step2-node-app",
+  "version": "1.0.0",
+  "description": "My first containerized Node app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────
+#  docker-compose.yml = the "conductor" that runs MULTIPLE containers
+#  together and wires them onto one private network so they can talk.
+#
+#  Start everything:  docker compose up
+#  Stop everything:   docker compose down
+# ─────────────────────────────────────────────────────────────────────
+
+services:
+  # ── Service #1: our own app (built from the Dockerfile in this folder) ──
+  web:
+    build: .                      # "." = build the image from THIS folder's Dockerfile
+    ports:
+      - "3000:3000"               # Mac's 3000 → container's 3000 (so we can open it)
+    environment:
+      # Tell our app where Redis is. The host is "redis" — the SERVICE NAME below.
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis                     # start Redis before our app
+
+  # ── Service #2: Redis (a ready-made image from Docker Hub — we don't build it) ──
+  redis:
+    image: redis:7                # pull the official Redis image, version 7
+    # Note: we do NOT publish a port here. Our "web" service reaches Redis
+    # privately over Docker's internal network — the outside world doesn't need it.
