@@ -1,0 +1,20 @@
+services:
+   web:
+     build: .
+     ports: 
+        - "3000:3000"
+     environment:
+        REDIS_URL: redis://redis:6379
+     depends_on:
+        - redis
+    
+   redis:
+     image: redis:7
+     volumes:
+        - redis-data:/data
+
+volumes:
+   redis-data:
+
+      
+

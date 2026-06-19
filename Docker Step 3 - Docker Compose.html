@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker — Step 3: Docker Compose</title>
+<style>
+  :root{
+    --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+    --blue:#2563eb; --blue-bg:#eff6ff;
+    --purple:#7c3aed; --purple-bg:#f5f3ff;
+    --red:#dc2626; --red-bg:#fef2f2;
+    --green:#059669; --green-bg:#ecfdf5;
+    --yellow:#d97706; --yellow-bg:#fffbeb;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --chip:#dbeafe;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); line-height:1.6; margin:0; background:#f3f4f6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:860px; margin:0 auto; background:#fff; padding:0 0 80px;}
+  /* Hero */
+  .hero{
+    background:linear-gradient(135deg,#7c3aed 0%,#2563eb 55%,#06b6d4 100%);
+    color:#fff; padding:54px 48px 46px; border-radius:0 0 28px 28px;
+  }
+  .hero .logo{font-size:46px; line-height:1; margin-bottom:18px;}
+  .hero h1{font-size:42px; margin:0 0 10px; letter-spacing:-1px;}
+  .hero p{font-size:18px; margin:0 0 22px; opacity:.92; max-width:620px;}
+  .chips{display:flex; flex-wrap:wrap; gap:9px;}
+  .chips span{
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28);
+    padding:6px 14px; border-radius:999px; font-size:13px; font-weight:600;
+  }
+  /* Layout */
+  .body{padding:0 48px;}
+  .legend{color:var(--muted); font-size:14px; margin:26px 0 8px; border-bottom:1px solid var(--line); padding-bottom:18px;}
+  .legend b{color:var(--ink);}
+  h2{
+    font-size:26px; margin:46px 0 4px; color:#111827; display:flex; align-items:center; gap:12px;
+  }
+  h2 .num{
+    background:var(--blue); color:#fff; font-size:16px; width:30px; height:30px;
+    border-radius:8px; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+  }
+  h2 + .rule{height:3px; background:linear-gradient(90deg,var(--blue),#06b6d4 70%,transparent); border-radius:3px; margin:6px 0 18px;}
+  h3{font-size:18px; color:var(--blue); margin:26px 0 8px;}
+  p{margin:12px 0;}
+  code{
+    background:#f1f5f9; color:#9333ea; font-family:"SF Mono",Menlo,Consolas,monospace;
+    font-size:.88em; padding:2px 6px; border-radius:5px; white-space:nowrap;
+  }
+  /* Code blocks */
+  pre{
+    background:var(--code-bg); color:var(--code-ink); padding:18px 20px; border-radius:12px;
+    overflow-x:auto; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:13.5px; line-height:1.7;
+    margin:16px 0;
+  }
+  pre .c{color:#64748b;}       /* comment */
+  pre .k{color:#7dd3fc;}       /* keyword/key */
+  pre .s{color:#fcd34d;}       /* string */
+  pre .g{color:#86efac;}       /* good/highlight */
+  pre .r{color:#fca5a5;}       /* red */
+  /* Callout boxes */
+  .box{border-left:5px solid; border-radius:0 12px 12px 0; padding:16px 20px; margin:18px 0; font-size:15px;}
+  .box .t{font-weight:700; margin-bottom:4px; display:block;}
+  .box.blue{background:var(--blue-bg); border-color:var(--blue);}
+  .box.blue .t{color:var(--blue);}
+  .box.purple{background:var(--purple-bg); border-color:var(--purple);}
+  .box.purple .t{color:var(--purple);}
+  .box.red{background:var(--red-bg); border-color:var(--red);}
+  .box.red .t{color:var(--red);}
+  .box.green{background:var(--green-bg); border-color:var(--green);}
+  .box.green .t{color:var(--green);}
+  .box.yellow{background:var(--yellow-bg); border-color:var(--yellow);}
+  .box.yellow .t{color:var(--yellow);}
+  /* Tables */
+  table{width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px;}
+  th{background:var(--blue); color:#fff; text-align:left; padding:11px 14px; font-weight:600;}
+  th:first-child{border-radius:8px 0 0 0;} th:last-child{border-radius:0 8px 0 0;}
+  td{padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tr:nth-child(even) td{background:#f9fafb;}
+  /* ASCII diagram block */
+  .ascii{background:var(--code-bg); color:#cbd5e1; padding:18px 22px; border-radius:12px;
+    font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px; line-height:1.55; white-space:pre; overflow-x:auto; margin:16px 0;}
+  .footer{text-align:center; color:var(--muted); font-size:14px; margin-top:54px; padding-top:24px; border-top:1px solid var(--line);}
+  .tick{color:var(--green); font-weight:700;}
+  .cross{color:var(--red); font-weight:700;}
+  ul{margin:12px 0; padding-left:22px;} li{margin:6px 0;}
+  @media print{ body{background:#fff;} .page{max-width:none;} .hero{border-radius:0;} }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <div class="logo">🐳🎼</div>
+    <h1>Docker — Step 3</h1>
+    <p>Docker Compose, explained from zero: running my app <b>and</b> Redis together with one file and one command. Every concept, every command, and every mistake I actually hit — laid out so future-me (or any beginner) gets it instantly.</p>
+    <div class="chips">
+      <span>What Compose is</span>
+      <span>The project, file by file</span>
+      <span>Find-by-name networking</span>
+      <span>Ports &amp; volumes</span>
+      <span>The commands</span>
+      <span>Real gotchas I hit</span>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <div class="legend">
+      <b>How to read the colored boxes:</b>
+      <span style="color:var(--blue)">■ Blue</span> = a key idea ·
+      <span style="color:var(--purple)">■ Purple</span> = bonus detail worth knowing ·
+      <span style="color:var(--red)">■ Red</span> = a mistake I genuinely made ·
+      <span style="color:var(--green)">■ Green</span> = the fix / the answer ·
+      <span style="color:var(--yellow)">■ Yellow</span> = a caution.
+    </div>
+
+    <!-- 1 -->
+    <h2><span class="num">1</span> The Big Picture</h2>
+    <div class="rule"></div>
+    <p>Steps 1 and 2 ran <b>one container at a time</b>, by hand. Step 3 is the jump to <b>many services running together and talking to each other</b> — started with a single command. That orchestration is what <b>Docker Compose</b> does.</p>
+    <pre><span class="c">Step 1:  docker run nginx          </span>→ ONE ready-made container
+<span class="c">Step 2:  docker build → docker run </span>→ ONE container (my own image)
+<span class="c">Step 3:  docker compose up         </span>→ MANY containers, wired together, ONE command</pre>
+    <div class="box blue">
+      <span class="t">🎼 The one-sentence definition</span>
+      <b>Docker Compose</b> is a conductor: I describe all my services in one file (<code>docker-compose.yml</code>), then <code>docker compose up</code> builds them, puts them on a shared private network, and starts them all in the right order.
+    </div>
+
+    <!-- 2 -->
+    <h2><span class="num">2</span> What We're Building: A Visit Counter</h2>
+    <div class="rule"></div>
+    <p>The demo is a tiny web page that counts visitors. The clever part: the count is <b>not</b> stored in my app — it's stored in <b>Redis</b>, a separate container. So even if my app restarts, the number is remembered, because Redis is holding it.</p>
+    <p>Two services work together:</p>
+    <table>
+      <tr><th>Service</th><th>What it is</th><th>Built or pulled?</th></tr>
+      <tr><td><code>web</code></td><td>My Node + Express app — serves the page, asks Redis to bump the counter</td><td><b>Built</b> from my Dockerfile</td></tr>
+      <tr><td><code>redis</code></td><td>An in-memory data store — keeps the visit count safe</td><td><b>Pulled</b> ready-made (<code>redis:7</code>)</td></tr>
+    </table>
+    <div class="ascii">          Your Mac (browser)
+                │  opens localhost:3000
+                ▼
+   ┌──── private Docker network ─────────┐
+   │                                     │
+   │   ┌─────────┐   "redis:6379"   ┌────────┐
+   │   │  web    │ ───────────────▶ │ redis  │
+   │   │ (Node)  │   by NAME, not IP│ (count)│
+   │   └─────────┘                  └────────┘
+   │       ▲ only this one has a public door (port 3000)
+   └─────────────────────────────────────┘</div>
+
+    <!-- 3 -->
+    <h2><span class="num">3</span> The Project, File by File</h2>
+    <div class="rule"></div>
+    <p>The whole project is just five small files. Here's the job of each:</p>
+    <table>
+      <tr><th>File</th><th>Its job</th></tr>
+      <tr><td><code>index.js</code></td><td>My app's code — an Express server that talks to Redis and serves the page</td></tr>
+      <tr><td><code>package.json</code></td><td>Lists my dependencies (<code>express</code>, <code>redis</code>) so <code>npm install</code> knows what to fetch</td></tr>
+      <tr><td><code>Dockerfile</code></td><td>The recipe to bake <i>my</i> code into an image</td></tr>
+      <tr><td><code>.dockerignore</code></td><td>Keeps junk (like <code>node_modules</code>) out of the image</td></tr>
+      <tr><td><code>docker-compose.yml</code></td><td>The conductor — describes <i>both</i> services and wires them together</td></tr>
+    </table>
+
+    <h3>index.js — the two lines that matter most</h3>
+    <pre><span class="c">// Connect to Redis by the HOSTNAME "redis" — that's the service</span>
+<span class="c">// name from docker-compose.yml, NOT an IP. Docker's network</span>
+<span class="c">// turns that name into the right address automatically.</span>
+const redisClient = createClient({
+  url: process.env.REDIS_URL || <span class="s">"redis://redis:6379"</span>,
+});
+
+<span class="c">// Connect to Redis FIRST, then start accepting web requests.</span>
+async function start() {
+  await redisClient.connect();          <span class="c">// ⬅ waits for Redis</span>
+  app.listen(PORT, <span class="s">"0.0.0.0"</span>, () => { ... });  <span class="c">// ⬅ only then listens</span>
+}</pre>
+    <div class="box purple">
+      <span class="t">💡 Why <code>"0.0.0.0"</code> and not <code>localhost</code>?</span>
+      <code>0.0.0.0</code> means "accept connections from <i>outside</i> the container," not just from inside it. If the app bound to <code>localhost</code> only, Docker's port forwarding couldn't reach it. It's the standard for containerized apps.
+    </div>
+
+    <!-- 4 -->
+    <h2><span class="num">4</span> The Dockerfile, Line by Line</h2>
+    <div class="rule"></div>
+    <p>Docker reads this top-to-bottom; each instruction adds a <b>layer</b> to the image.</p>
+    <pre><span class="k">FROM</span> node:20-alpine        <span class="c"># start from a tiny Linux that already has Node v20</span>
+<span class="k">WORKDIR</span> /app               <span class="c"># work inside /app (a clean room for my files)</span>
+<span class="k">COPY</span> package*.json ./      <span class="c"># copy ONLY the dependency list first (for caching)</span>
+<span class="k">RUN</span> npm install            <span class="c"># install deps — happens once, while BUILDING</span>
+<span class="k">COPY</span> . .                   <span class="c"># now copy the rest of my code in</span>
+<span class="k">EXPOSE</span> 3000                <span class="c"># documentation only — does NOT open the port</span>
+<span class="k">CMD</span> [<span class="s">"node","index.js"</span>]   <span class="c"># the command that runs when a CONTAINER starts</span></pre>
+    <table>
+      <tr><th>Distinction</th><th>What it means</th></tr>
+      <tr><td><code>RUN</code> vs <code>CMD</code></td><td><b>RUN</b> happens once, <i>while building the image</i> (e.g. install). <b>CMD</b> happens later, <i>every time a container starts</i> (e.g. launch the app). "Set up the kitchen" vs "cook when a customer arrives."</td></tr>
+      <tr><td><code>EXPOSE</code> vs <code>ports:</code></td><td><b>EXPOSE</b> is just a label for humans. The <i>real</i> door-opening happens in the compose file's <code>ports:</code>. EXPOSE = the sign on the door; <code>ports:</code> = actually unlocking it.</td></tr>
+      <tr><td>Why <code>COPY package*.json</code> first?</td><td>Code changes constantly; dependencies rarely. Copying the dependency list and installing <i>before</i> copying code means editing <code>index.js</code> doesn't re-run the slow <code>npm install</code> — Docker reuses the cached layer.</td></tr>
+    </table>
+    <div class="box red">
+      <span class="t">🚫 The gotcha that cost me: a missing <code>CMD</code></span>
+      My first Dockerfile ended at <code>EXPOSE 3000</code> with <b>no <code>CMD</code></b>. Result: <code>web exited with code 0</code> and the page refused to load. With no <code>CMD</code>, Docker ran the base image's default (the Node REPL), which had nothing to do, so it quit instantly — no main process means the container stops. <b>The fix:</b> add <code>CMD ["node","index.js"]</code> so the container has a long-lived process (the web server) and stays up.
+    </div>
+
+    <!-- 5 -->
+    <h2><span class="num">5</span> docker-compose.yml, Line by Line</h2>
+    <div class="rule"></div>
+    <div class="box yellow">
+      <span class="t">⚠️ It's YAML — indentation IS the structure</span>
+      Things indented further "belong to" the thing above them. There are no brackets; the spacing is the meaning. Read it like an outline, and keep the indentation consistent.
+    </div>
+    <pre><span class="k">services:</span>                      <span class="c"># the list of containers I want</span>
+  <span class="k">web:</span>                         <span class="c"># service #1 — MY app (the name is my choice)</span>
+    <span class="k">build:</span> .                    <span class="c"># build the image from the Dockerfile in this folder</span>
+    <span class="k">ports:</span>
+      - <span class="s">"3000:3000"</span>            <span class="c"># HOST:CONTAINER — a door from my Mac into the app</span>
+    <span class="k">environment:</span>
+      <span class="k">REDIS_URL:</span> redis://redis:6379   <span class="c"># config; "redis" = the service name below</span>
+    <span class="k">depends_on:</span>
+      - redis                  <span class="c"># start redis BEFORE web</span>
+
+  <span class="k">redis:</span>                       <span class="c"># service #2 — the data store (ready-made)</span>
+    <span class="k">image:</span> redis:7              <span class="c"># pull official Redis v7; NO build</span>
+    <span class="k">volumes:</span>
+      - redis-data:/data       <span class="c"># attach the named volume to Redis's data folder</span>
+                               <span class="c"># (no ports: → reachable only INSIDE the network)</span>
+
+<span class="k">volumes:</span>                       <span class="c"># top-level: declare the named volume</span>
+  <span class="k">redis-data:</span></pre>
+    <table>
+      <tr><th>Key</th><th>Meaning</th></tr>
+      <tr><td><code>services:</code></td><td>The list of containers to run</td></tr>
+      <tr><td><code>web:</code> / <code>redis:</code></td><td>Service names <i>I</i> choose — each one becomes a <b>hostname</b> on the network</td></tr>
+      <tr><td><code>build: .</code></td><td>Build this service's image from the Dockerfile here</td></tr>
+      <tr><td><code>image: redis:7</code></td><td>Pull a ready-made image instead of building</td></tr>
+      <tr><td><code>ports:</code></td><td>Publish a door to the outside (<code>host:container</code>) — only for services the browser needs</td></tr>
+      <tr><td><code>environment:</code></td><td>Pass config (env vars) into the container</td></tr>
+      <tr><td><code>depends_on:</code></td><td>Startup order — start the listed service first</td></tr>
+      <tr><td><code>volumes:</code> (top-level)</td><td>Declare a named volume so data can outlive the container</td></tr>
+    </table>
+    <div class="box yellow">
+      <span class="t">⚠️ <code>depends_on</code> caveat</span>
+      It waits for Redis to <i>start</i>, not to be fully <i>ready for connections</i>. Usually fine for Redis. Fussy services need a <code>healthcheck</code> to wait until they're truly ready.
+    </div>
+
+    <!-- 6 -->
+    <h2><span class="num">6</span> Networking — Find Each Other by Name</h2>
+    <div class="rule"></div>
+    <div class="box purple">
+      <span class="t">🌟 The heart of Step 3</span>
+      Compose creates a <b>private network</b> where every service is reachable by its <b>service name</b>. My app connects to <code>redis://redis:6379</code> — that <code>redis</code> is the service name, not an IP address. No IP addresses, ever. Docker resolves the name automatically.
+    </div>
+    <p>This works in <b>all directions</b>: <code>redis</code> could reach the app at <code>web:3000</code>; a future frontend could reach a backend at <code>http://backend:8000</code>.</p>
+    <h3>Internal port vs published port (a key subtlety)</h3>
+    <table>
+      <tr><th>From…</th><th>Address used</th><th>Which port</th><th>Needs <code>ports:</code>?</th></tr>
+      <tr><td>Another container</td><td><code>redis:6379</code> / <code>web:3000</code></td><td>the <b>container</b> port</td><td><span class="cross">✗ No</span></td></tr>
+      <tr><td>My Mac's browser</td><td><code>localhost:3000</code></td><td>the <b>host</b> port</td><td><span class="tick">✓ Yes</span></td></tr>
+    </table>
+    <p><b>Proof:</b> <code>redis</code> has <i>no</i> <code>ports:</code> line, yet <code>web</code> still reaches it — because container-to-container traffic doesn't need publishing. <code>ports:</code> is <b>only</b> for letting the outside world in. So: only publish ports for services the browser actually uses; keep your database private. 🔒</p>
+
+    <!-- 7 -->
+    <h2><span class="num">7</span> Ports — host : container</h2>
+    <div class="rule"></div>
+    <p>A port mapping reads <b>left = my Mac, right = inside the container</b>:</p>
+    <div class="ascii">    - "3000:3000"
+         │     │
+         │     └── port INSIDE the container (where my app listens)
+         └──────── port on MY MAC (what I type in the browser)</div>
+    <p>The two numbers don't have to match. <code>"8080:3000"</code> would mean "visit <code>localhost:8080</code>, and it reaches the app's 3000 inside." Whatever's on the <b>left</b> is the one you open in the browser.</p>
+    <div class="box red">
+      <span class="t">🚫 The typo that gave me "connection refused"</span>
+      I wrote <code>"30000:3000"</code> by accident (an extra <code>0</code>). The containers were perfectly healthy, but my app was published on my Mac's port <b>30000</b>, not 3000 — so <code>localhost:3000</code> refused. <b>How I found it:</b> <code>docker compose ps</code> showed <code>0.0.0.0:30000->3000</code> in the PORTS column. <b>Lesson:</b> the PORTS column tells you the <i>real</i> doorway — never trust your memory of what you typed.
+    </div>
+
+    <!-- 8 -->
+    <h2><span class="num">8</span> Data Persistence — Named Volumes</h2>
+    <div class="rule"></div>
+    <p>By default Redis saves its data to <code>/data</code> <i>inside</i> the container — so a <code>docker compose down</code> destroys the container <b>and the count</b>. A <b>named volume</b> moves that folder to a managed box <i>outside</i> the container, so it survives.</p>
+    <div class="ascii">  WITHOUT a volume:               WITH redis-data:/data:
+
+  ┌─ redis container ─┐           ┌─ redis container ─┐
+  │   /data           │           │   /data ──────────┼──┐ plugs in
+  │  (dies on `down`) │           └───────────────────┘  │
+  └───────────────────┘                                  ▼
+                                 ┌─ redis-data (managed box) ─┐
+                                 │   dump.rdb  (survives!) ✓  │
+                                 └────────────────────────────┘</div>
+    <p>The two <code>volumes:</code> keys do different jobs:</p>
+    <table>
+      <tr><th>Where</th><th>What it does</th></tr>
+      <tr><td><code>volumes:</code> <i>inside</i> <code>redis:</code></td><td><b>Attaches</b> — "mount the box <code>redis-data</code> at <code>/data</code> in this container." Reads as <code>NAME:PATH</code>.</td></tr>
+      <tr><td><code>volumes:</code> at the <i>top level</i></td><td><b>Declares</b> — "create a managed storage box called <code>redis-data</code>." Like declaring a variable.</td></tr>
+    </table>
+    <div class="box green">
+      <span class="t">✅ The survival ladder</span>
+      <table style="margin:10px 0 0;">
+        <tr><th>Where the data lives</th><th>app restart</th><th>stop / start</th><th><code>down</code></th></tr>
+        <tr><td>App's memory</td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td></tr>
+        <tr><td>Redis <code>/data</code> (in container)</td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td><td><span class="cross">✗</span></td></tr>
+        <tr><td><b>Named volume</b></td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+      </table>
+    </div>
+    <div class="box purple">
+      <span class="t">💡 Named volume vs bind mount</span>
+      <code>redis-data:/data</code> (a <i>name</i>, no slash) is Docker-managed storage — best for databases. <code>./src:/app/src</code> (a <i>path</i>, with <code>./</code>) maps a real folder from my Mac into the container — great for live code reload in development.
+    </div>
+
+    <!-- 9 -->
+    <h2><span class="num">9</span> The Commands I Actually Use</h2>
+    <div class="rule"></div>
+    <p>Run all of these from the folder that has the <code>docker-compose.yml</code>.</p>
+    <pre><span class="k">docker compose up</span>              <span class="c"># build + network + start, logs in the foreground</span>
+<span class="k">docker compose up -d</span>           <span class="c"># -d = detached (background), frees my terminal</span>
+<span class="k">docker compose up --build</span>      <span class="c"># force a rebuild first (after a Dockerfile/code change)</span>
+<span class="k">docker compose down</span>            <span class="c"># stop AND remove containers + network (keeps named volumes)</span>
+<span class="k">docker compose down -v</span>         <span class="c"># also wipe volumes — DELETES the data (careful!)</span>
+<span class="k">docker compose ps</span>              <span class="c"># list this project's services + their PORTS</span>
+<span class="k">docker compose restart web</span>     <span class="c"># bounce ONE service (does NOT re-read the yaml)</span>
+<span class="k">docker compose logs -f web</span>      <span class="c"># follow one service's logs live</span>
+<span class="k">docker compose exec web sh</span>      <span class="c"># open a shell INSIDE the running web container</span></pre>
+
+    <h3>restart vs up vs up --build — when to use which</h3>
+    <table>
+      <tr><th>I changed…</th><th>Command</th><th>Why</th></tr>
+      <tr><td>Nothing — just want a clean bounce</td><td><code>docker compose restart web</code></td><td>Same container, off and on again</td></tr>
+      <tr><td>The <code>docker-compose.yml</code> (ports, volumes, env)</td><td><code>docker compose up -d</code></td><td><b>up</b> compares the file to reality and recreates what changed</td></tr>
+      <tr><td>My code or the <code>Dockerfile</code></td><td><code>docker compose up -d --build</code></td><td>Rebuilds the image first, then recreates</td></tr>
+    </table>
+    <div class="box red">
+      <span class="t">🚫 <code>restart</code> does NOT apply compose-file edits</span>
+      I changed the yaml and ran <code>restart</code> — nothing happened. <code>restart</code> just stops and starts the <b>same existing container with its old config</b>; it never re-reads the file. To apply edits (like adding the volume) you need <code>up</code>, which <b>recreates</b> the container. Mental model: <b>restart = off/on; up = make reality match the file.</b>
+    </div>
+
+    <h3>Viewing logs — three ways</h3>
+    <table>
+      <tr><th>Goal</th><th>Command</th></tr>
+      <tr><td>One Compose service, live</td><td><code>docker compose logs -f web</code></td></tr>
+      <tr><td>Any container anywhere (incl. <code>docker run</code>)</td><td><code>docker logs -f &lt;container-name&gt;</code></td></tr>
+      <tr><td>Log <i>files</i> an app writes inside itself</td><td><code>docker compose exec web sh</code> → then <code>cat</code> / <code>tail</code></td></tr>
+    </table>
+    <div class="box blue">
+      <span class="t">💡 Naming containers, and where logs come from</span>
+      Add <code>--name myname</code> to a plain <code>docker run</code> to label a container (otherwise Docker invents one like <code>magical_franklin</code>). With Compose, names are auto-built as <code>project-service-1</code>, e.g. <code>roshan-prac-step3-web-1</code>. My app logs with <code>console.log</code>, which goes to <b>stdout</b> — Docker captures that automatically, so <code>docker compose logs</code> shows it; there's no log <i>file</i> to hunt for inside.
+    </div>
+
+    <!-- 10 -->
+    <h2><span class="num">10</span> Shutdown — Signals &amp; Exit Codes</h2>
+    <div class="rule"></div>
+    <p><b>Ctrl+C</b> (or <code>docker compose down</code>) triggers a graceful, two-phase shutdown:</p>
+    <ul>
+      <li><b>SIGTERM</b> (signal 15) = "please shut down nicely" — Docker waits ~10 seconds.</li>
+      <li><b>SIGKILL</b> (signal 9) = "die now" — only if it didn't stop in time (forced).</li>
+    </ul>
+    <table>
+      <tr><th>Container</th><th>Handled SIGTERM?</th><th>How it died</th><th>Exit code</th></tr>
+      <tr><td>redis</td><td><span class="tick">✓</span> yes — saved data, exited itself</td><td>clean</td><td><b>0</b></td></tr>
+      <tr><td>web (my app)</td><td><span class="cross">✗</span> no — ignored it</td><td>force-killed after timeout</td><td><b>137</b></td></tr>
+    </table>
+    <div class="box blue">
+      <span class="t">💡 Exit codes encode the signal</span>
+      <code>137 = 128 + 9</code> (killed by SIGKILL). <code>143 = 128 + 15</code> (SIGTERM). Exit <b>0</b> = finished cleanly. Optional polish — make my app shut down gracefully like Redis:
+      <pre style="margin-top:10px;">process.on(<span class="s">"SIGTERM"</span>, () =&gt; server.close(() =&gt; process.exit(0)));</pre>
+    </div>
+
+    <!-- 11 -->
+    <h2><span class="num">11</span> Gotchas I Actually Hit (Field Notes)</h2>
+    <div class="rule"></div>
+    <div class="box red">
+      <span class="t">🚫 #1 — "connection refused" from a plain <code>docker run</code></span>
+      I ran the app alone with <code>docker run</code> and got <code>getaddrinfo ENOTFOUND redis</code>. Cause: the hostname <code>redis</code> only exists <i>inside a Compose network</i>. My code waits for <code>redisClient.connect()</code> <b>before</b> <code>app.listen()</code> — so with no Redis, it never starts the web server, and nothing listens on 3000. <b>Fix:</b> run it with <code>docker compose up</code> (which starts Redis too), not a standalone <code>docker run</code>.
+    </div>
+    <div class="box red">
+      <span class="t">🚫 #2 — wrong host port (<code>30000:3000</code>)</span>
+      A typo published the app on port 30000, not 3000. The container was healthy; only the doorway was wrong. Found it in the PORTS column of <code>docker compose ps</code>. Confirmed with <code>curl localhost:3000</code> (curl never caches, unlike a browser).
+    </div>
+    <div class="box red">
+      <span class="t">🚫 #3 — edited the yaml, ran <code>restart</code>, nothing changed</span>
+      <code>restart</code> reuses the old container config. Compose-file edits need <code>docker compose up</code> to take effect.
+    </div>
+    <div class="box green">
+      <span class="t">✅ My debugging ladder for "connection refused"</span>
+      <b>1.</b> <code>docker compose ps</code> — are the containers even running? <br>
+      <b>2.</b> Look at the PORTS column — what port is <i>actually</i> published? <br>
+      <b>3.</b> <code>curl http://localhost:&lt;port&gt;</code> — get the honest answer (no browser caching). <br>
+      <b>4.</b> If a container exited — <code>docker compose logs &lt;service&gt;</code> to see why.
+    </div>
+
+    <!-- 12 -->
+    <h2><span class="num">12</span> Full Command Cheat Sheet</h2>
+    <div class="rule"></div>
+    <pre><span class="c"># --- lifecycle ---</span>
+docker compose up                 <span class="c"># build + start, logs in foreground</span>
+docker compose up -d              <span class="c"># start in background</span>
+docker compose up -d --build      <span class="c"># rebuild image, then start</span>
+docker compose down               <span class="c"># stop + remove (keeps volumes)</span>
+docker compose down -v            <span class="c"># stop + remove + WIPE volumes</span>
+docker compose restart web        <span class="c"># bounce one service</span>
+docker compose stop / start       <span class="c"># stop/start without removing</span>
+
+<span class="c"># --- inspecting ---</span>
+docker compose ps                 <span class="c"># services + status + ports</span>
+docker compose logs -f web        <span class="c"># follow one service's logs</span>
+docker compose logs --tail 50     <span class="c"># last 50 lines of everything</span>
+docker compose exec web sh        <span class="c"># shell into the running container</span>
+docker compose exec redis redis-cli   <span class="c"># open the Redis CLI to inspect the count</span>
+
+<span class="c"># --- the data, hands-on ---</span>
+docker compose exec redis redis-cli GET visits   <span class="c"># read the stored count</span>
+docker volume ls                  <span class="c"># list named volumes on my machine</span></pre>
+
+    <!-- 13 -->
+    <h2><span class="num">13</span> Glossary</h2>
+    <div class="rule"></div>
+    <table>
+      <tr><th>Term</th><th>Plain-English meaning</th></tr>
+      <tr><td><b>Image</b></td><td>A frozen snapshot of an app + everything it needs. The recipe's result.</td></tr>
+      <tr><td><b>Container</b></td><td>A running copy of an image — the live app.</td></tr>
+      <tr><td><b>Service</b></td><td>One entry in <code>docker-compose.yml</code> — Compose's word for a container (plus its config).</td></tr>
+      <tr><td><b>Compose network</b></td><td>The private network Compose builds so services can find each other by name.</td></tr>
+      <tr><td><b>Named volume</b></td><td>Docker-managed storage that lives outside any container, so data survives.</td></tr>
+      <tr><td><b>Publish a port</b></td><td>Punch a doorway from my Mac into a container (<code>ports:</code> / <code>-p</code>).</td></tr>
+      <tr><td><b>SIGTERM / SIGKILL</b></td><td>"Shut down nicely" vs "die now" signals sent on stop.</td></tr>
+    </table>
+
+    <div class="box green">
+      <span class="t">✅ One-line summary of Step 3</span>
+      Compose runs many services with one file and one command; the Dockerfile still builds <i>my</i> app. Services find each other <b>by name</b> on a private network (the browser still needs a published port). Data survives a <b>stop</b> but not a <b>remove</b> — a <b>named volume</b> makes it durable. A missing <b>CMD</b> kept my container exiting; a port typo and the <code>redis</code> hostname were my other two gotchas. Next: Step 4 — the full multi-service stack (frontend + backend + Redis + LiveKit).
+    </div>
+
+    <div class="footer">Docker — Step 3: Docker Compose · my own practice log · 🐳🎼</div>
+  </div>
+</div>
+</body>
+</html>
