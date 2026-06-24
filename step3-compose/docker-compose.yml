@@ -23,3 +23,8 @@ services:
     image: redis:7                # pull the official Redis image, version 7
     # Note: we do NOT publish a port here. Our "web" service reaches Redis
     # privately over Docker's internal network — the outside world doesn't need it.
+    volumes:
+        - redis-data:/data
+
+volumes:
+  redis-data:
