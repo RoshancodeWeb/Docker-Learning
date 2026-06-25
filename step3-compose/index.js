@@ -28,7 +28,7 @@ app.get("/", async (req, res) => {
   res.send(`
     <h1>👋 Hello! You are visitor #${visits}</h1>
     <p>This number is stored in <b>Redis</b> — a different container.</p>
-    <p>Refresh the page and watch it go up. Restart my app and it still remembers,
+    <p>Refresh the page and watch it go up. Restart my app and it still remembers Really,
        because Redis is holding the count, not me.</p>
   `);
 });

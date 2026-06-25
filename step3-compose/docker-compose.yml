@@ -17,7 +17,10 @@ services:
       REDIS_URL: redis://redis:6379
     depends_on:
       - redis                     # start Redis before our app
-
+    command: npm run dev          # dev-only override: runs nodemon (Dockerfile CMD stays "node" for prod)
+    volumes:
+      - .:/app
+      - /app/node_modules
   # ── Service #2: Redis (a ready-made image from Docker Hub — we don't build it) ──
   redis:
     image: redis:7                # pull the official Redis image, version 7
