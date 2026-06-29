@@ -1,0 +1,85 @@
+services:
+
+   frontend:
+      build: ./frontend
+      ports:
+        - "3000:3000"
+      # ── CONFIG: loaded from the frontend's OWN .env file ──────────────
+      # Each project now carries its own env file (per-project config),
+      # instead of one shared central .env. Compose reads every line of the
+      # file below and injects it into the frontend container.
+      env_file:
+        - ./frontend/.env
+      environment:
+        # API_URL is now provided by ./frontend/.env (via env_file above), so
+        # we COMMENT OUT this line. It's kept here only to show the OTHER way
+        # of doing it — a single central .env + ${substitution}. You need just
+        # ONE method; we chose per-project env_file, so this stays disabled.
+        # API_URL: ${API_URL}
+        #
+        # WATCHPACK_POLLING stays here (not in .env): it's a Docker-runtime
+        # tweak for reliable hot reload on macOS, not application config.
+        WATCHPACK_POLLING: "true"
+      depends_on:
+        - backend
+      volumes:
+        - ./frontend:/app
+        - /app/node_modules
+        - /app/.next
+      # ── NETWORK: frontend lives ONLY on frontend-net ──
+      # It can reach `backend` (also on frontend-net) but NOT `redis`.
+      networks:
+        - frontend-net
+
+   backend:
+      build: ./backend
+      # ── CONFIG: loaded from the backend's OWN .env file ──────────────
+      # The backend's per-project env file. The frontend never sees these
+      # values — each container only gets the env file you give it here.
+      env_file:
+        - ./backend/.env
+      # The central-.env mapping below is COMMENTED OUT because env_file (above)
+      # already injects REDIS_URL. Kept as a reference for the alternative way:
+      # environment:
+      #   REDIS_URL: ${REDIS_URL}
+      command: npm run dev
+      depends_on:
+         - redis
+      volumes:
+         - ./backend:/app
+         - /app/node_modules
+      # ── NETWORK: backend is the BRIDGE — on BOTH networks ──
+      # Reaches frontend (via frontend-net) AND redis (via backend-net).
+      networks:
+         - frontend-net
+         - backend-net
+
+
+
+
+      
+
+   redis:
+      image: redis:7
+      volumes:
+        - redis-data:/data
+      # ── NETWORK: redis lives ONLY on backend-net (private) ──
+      # Only the backend can reach it; the frontend has no route here.
+      networks:
+        - backend-net
+
+volumes:
+    redis-data:
+
+# ── Custom networks (two tiers) ──────────────────────────────────────
+# frontend-net : frontend ⇄ backend
+# backend-net  : backend  ⇄ redis
+# frontend and redis share NO network, so the frontend can't even resolve
+# "redis", let alone connect to it. Isolation by design.
+networks:
+  frontend-net:
+  backend-net:
+
+
+      
+         
